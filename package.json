@@ -1,0 +1,23 @@
+{
+  "name": "orbital-sim",
+  "version": "1.0.0",
+  "description": "A simple 2D orbital sim",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sadeshmukh/orbital-sim.git"
+  },
+  "author": "sadeshmukh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sadeshmukh/orbital-sim/issues"
+  },
+  "homepage": "https://github.com/sadeshmukh/orbital-sim#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
