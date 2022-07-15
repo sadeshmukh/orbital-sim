@@ -4,55 +4,89 @@ let context = canvas.getContext("2d");
 context.canvas.width = window.innerWidth - 50;
 context.canvas.height = window.innerHeight - 200;
 
-const baseSpeed = 0.25;
-const gravityPower = 5;
+const gravityPower = 6.6743 * 5;
 const bounceReduction = 1 / 3;
+let paused = true;
+const speedSlider = document.getElementById("speedSlider");
+let baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
 
 let start, previousTimeStamp;
 
-const stationaries = [
+const initialStationaries = [
   {
     name: "sun",
-    x: (2 / 5) * context.canvas.width,
+    x: (1 / 2) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
-    mass: 1000,
+    mass: 10 * 10 ** 2,
     radius: 30,
-    color: "#f7f7f7",
+    // color: "#f7f7f7",
+    color: "#ddff66",
   },
   {
     name: "noice",
-    x: (3 / 5) * context.canvas.width,
+    x: (3 / 4) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
-    mass: 500,
+    mass: 5 * 10 ** 2,
     radius: 20,
-    color: "#f7f7f7",
+    // color: "#f7f7f7",
+    color: "#ddff66",
+  },
+  {
+    name: "noice2mee2",
+    x: (1 / 4) * context.canvas.width,
+    y: (1 / 2) * context.canvas.height,
+    mass: 5 * 10 ** 2,
+    radius: 20,
+    // color: "#f7f7f7",
+    color: "#ddff66",
   },
 ];
 
-//#800020
-
-const moving = [
+const initialMoving = [
   {
     name: "main",
-    x: (1 / 2) * context.canvas.width,
-    y: (3 / 4) * context.canvas.height,
+    x: (3 / 4) * context.canvas.width,
+    y: (1 / 4) * context.canvas.height,
     radius: 15,
-    color: "#d3d3d3",
-    velocity: { x: 10, y: 0 },
+    // color: "#d3d3d3",
+    color: "#55aabb",
+    velocity: { x: 0, y: 0 },
     mass: 200,
     index: 0,
   },
   {
     name: "secondary",
     x: (1 / 4) * context.canvas.width,
-    y: (1 / 2) * context.canvas.height,
+    y: (3 / 4) * context.canvas.height,
     radius: 15,
-    color: "#800020",
-    velocity: { x: -1, y: 1 },
+    // color: "#800020",
+    color: "#bb3388",
+    velocity: { x: 0, y: 0 },
     mass: 350,
     index: 1,
   },
 ];
+
+let stationaries = JSON.parse(JSON.stringify(initialStationaries));
+
+//#800020
+
+let moving = JSON.parse(JSON.stringify(initialMoving));
+
+function updateInput() {
+  baseSpeed = 0.2 * speedSlider.value;
+}
+
+function reset() {
+  paused = true;
+  moving = JSON.parse(JSON.stringify(initialMoving));
+  stationaries = JSON.parse(JSON.stringify(initialStationaries));
+  clearCanvas();
+  drawAll();
+  console.log((speedSlider.min + speedSlider.max) / 2);
+  baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
+  speedSlider.value = (speedSlider.min + speedSlider.max) / 2;
+}
 
 function calculateDistance([x1, y1], [x2, y2]) {
   return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
@@ -121,7 +155,7 @@ function calculateVelocity(elapsed) {
       }
       //#endregion
       //#region Gravity
-      //#region Downwards Gravity
+
       // if (
       //   !(y + (velocity.y * elapsed) / 1000 + radius >= context.canvas.height) &&
       //   !(y + (velocity.y * elapsed) / 1000 + radius <= 0) &&
@@ -135,7 +169,6 @@ function calculateVelocity(elapsed) {
       // }
       //#endregion
       //#region Object Gravity
-      console.log(movingX, movingY);
 
       stationaries.forEach(({ x: fixedX, y: fixedY, mass: fixedMass }) => {
         distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
@@ -146,12 +179,22 @@ function calculateVelocity(elapsed) {
 
         // Apply gravity force in proportion to the x/y distances
         moving[index].velocity.x +=
-          (xDistance / (Math.abs(xDistance) + Math.abs(yDistance))) * gravForce;
+          (xDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+          gravForce *
+          baseSpeed;
         moving[index].velocity.y +=
-          (yDistance / (Math.abs(xDistance) + Math.abs(yDistance))) * gravForce;
+          (yDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+          gravForce *
+          baseSpeed;
       });
-      console.log(velocity, [movingX, movingY]);
       //#endregion
+      //#endregion
+      //#region Velocity Cap
+      const velocityMagnitude = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
+      if (velocityMagnitude >= 10000) {
+        velocity.x *= 10000 / velocityMagnitude;
+        velocity.y *= 10000 / velocityMagnitude;
+      }
       //#endregion
     }
   );
@@ -170,20 +213,22 @@ function updateCanvas(timestamp) {
   }
 
   let elapsed = timestamp - start;
-  if (elapsed > 500) {
+  if (elapsed > 100) {
     elapsed = 10;
   }
   start = timestamp;
 
-  clearCanvas();
-  calculateMotion(elapsed);
-  calculateVelocity(elapsed);
-
-  drawAll();
-  window.requestAnimationFrame(updateCanvas);
+  if (!paused) {
+    clearCanvas();
+    calculateMotion(elapsed);
+    calculateVelocity(elapsed);
+    drawAll();
+    window.requestAnimationFrame(updateCanvas);
+  }
 }
 
-window.requestAnimationFrame(updateCanvas);
+drawAll();
+
 // theContext.beginPath();
 // theContext.arc(300, 50, 5, 0, 2 * Math.PI);
 // theContext.fillStyle = "#f7f7f7";
