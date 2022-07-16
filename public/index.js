@@ -1,10 +1,24 @@
 let canvas = document.getElementById("theCanvas");
 let context = canvas.getContext("2d");
+let whoosh = new Audio("whoosh.wav");
+let whooshIsPlaying = false;
+
+whoosh.addEventListener(
+  "ended",
+  function () {
+    whooshIsPlaying = false;
+  },
+  false
+);
 
 context.canvas.width = window.innerWidth - 50;
 context.canvas.height = window.innerHeight - 250;
 
 const bounceReduction = 1 / 3;
+const bounceBuffer = 10;
+const velocityCap = 10000;
+const velocityHistoryLength = 10;
+const velocityToSound = 3000;
 let paused = true;
 const speedSlider = document.getElementById("speedSlider");
 const gravitySlider = document.getElementById("gravitySlider");
@@ -29,18 +43,20 @@ const initialStationaries = [
     x: (3 / 4) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
     mass: 5 * 10 ** 2,
-    radius: 20,
+    radius: 25,
     // color: "#f7f7f7",
     color: "#ddff66",
+    active: false,
   },
   {
     name: "noice2mee2",
     x: (1 / 4) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
     mass: 5 * 10 ** 2,
-    radius: 20,
+    radius: 25,
     // color: "#f7f7f7",
     color: "#ddff66",
+    active: false,
   },
 ];
 
@@ -55,25 +71,66 @@ const initialMoving = [
     velocity: { x: 0, y: 0 },
     mass: 200,
     index: 0,
+    active: true,
+    velocityHistory: [],
   },
   {
-    name: "secondary",
+    name: "second",
     x: (1 / 4) * context.canvas.width,
     y: (3 / 4) * context.canvas.height,
-    radius: 15,
+    radius: 17.5,
     // color: "#800020",
     color: "#bb3388",
     velocity: { x: 0, y: 0 },
-    mass: 350,
+    mass: 300,
     index: 1,
+    active: false,
+    velocityHistory: [],
+  },
+  {
+    name: "third",
+    x: (1 / 4) * context.canvas.width,
+    y: (1 / 4) * context.canvas.height,
+    radius: 20,
+    // color: "#800020",
+    color: "#f7f7f7",
+    velocity: { x: 0, y: 0 },
+    mass: 400,
+    index: 2,
+    active: false,
+    velocityHistory: [],
+  },
+  {
+    name: "fourth",
+    x: (3 / 4) * context.canvas.width,
+    y: (3 / 4) * context.canvas.height,
+    radius: 22.5,
+    // color: "#800020",
+    color: "#6C0BA9",
+    velocity: { x: 0, y: 0 },
+    mass: 500,
+    index: 3,
+    active: true,
+    velocityHistory: [],
   },
 ];
 
 let stationaries = JSON.parse(JSON.stringify(initialStationaries));
 
-//#800020
-
 let moving = JSON.parse(JSON.stringify(initialMoving));
+
+function toggleSecondary() {
+  stationaries[1].active = !stationaries[1].active;
+  stationaries[2].active = !stationaries[2].active;
+  clearCanvas();
+  drawAll();
+}
+
+function toggleMoving(index) {
+  moving[index].active = !moving[index].active;
+  clearCanvas();
+  drawAll();
+}
 
 function updateSpeedInput() {
   baseSpeed = 0.2 * speedSlider.value;
@@ -109,10 +166,16 @@ function drawCircle(x, y, radius, color) {
 }
 
 function drawAll() {
-  stationaries.forEach(function ({ x, y, radius, color }) {
+  stationaries.forEach(function ({ x, y, radius, color, active }) {
+    if (!active && active != undefined) {
+      return;
+    }
     drawCircle(x, y, radius, color);
   });
-  moving.forEach(function ({ x, y, radius, color }) {
+  moving.forEach(function ({ x, y, radius, color, active }) {
+    if (!active) {
+      return;
+    }
     drawCircle(x, y, radius, color);
   });
 }
@@ -123,11 +186,22 @@ function clearCanvas() {
 
 function calculateVelocity(elapsed) {
   moving.forEach(
-    ({ x: movingX, y: movingY, velocity, index, radius, mass: movingMass }) => {
+    ({
+      x: movingX,
+      y: movingY,
+      velocity,
+      index,
+      radius,
+      mass: movingMass,
+      active,
+      velocityHistory,
+    }) => {
+      if (!active) {
+        return;
+      }
       //#region Bouncing
       if (
-        movingY + radius + (velocity.y * elapsed) / 1000 >=
-          context.canvas.height &&
+        movingY + radius + bounceBuffer >= context.canvas.height &&
         velocity.y >= 0
       ) {
         moving[index].velocity.y *= bounceReduction;
@@ -135,17 +209,13 @@ function calculateVelocity(elapsed) {
         moving[index].velocity.y = -1 * moving[index].velocity.y;
       }
 
-      if (
-        movingY - radius + (velocity.y * elapsed) / 1000 <= 0 &&
-        velocity.y <= 0
-      ) {
+      if (movingY - radius - bounceBuffer <= 0 && velocity.y <= 0) {
         moving[index].velocity.y *= bounceReduction;
 
         moving[index].velocity.y = -moving[index].velocity.y;
       }
       if (
-        movingX + radius + (velocity.x * elapsed) / 1000 >=
-          context.canvas.width &&
+        movingX + radius + bounceBuffer >= context.canvas.width &&
         velocity.x >= 0
       ) {
         moving[index].velocity.x *= bounceReduction;
@@ -153,52 +223,54 @@ function calculateVelocity(elapsed) {
         moving[index].velocity.x = -moving[index].velocity.x;
       }
 
-      if (
-        movingX - radius + (velocity.x * elapsed) / 1000 <= 0 &&
-        velocity.x <= 0
-      ) {
+      if (movingX - radius - bounceBuffer <= 0 && velocity.x <= 0) {
         moving[index].velocity.x *= bounceReduction;
 
         moving[index].velocity.x = -moving[index].velocity.x;
       }
       //#endregion
-      //#region Gravity
-
-      // if (
-      //   !(y + (velocity.y * elapsed) / 1000 + radius >= context.canvas.height) &&
-      //   !(y + (velocity.y * elapsed) / 1000 + radius <= 0) &&
-      //   !(x + (velocity.x * elapsed) / 1000 + radius >= context.canvas.width) &&
-      //   !(x + (velocity.x * elapsed) / 1000 + radius <= 0)
-      // ) {
-      //   velocity.y += (gravityPower * elapsed) / 1000;
-      // }
-      // if (velocity.y + y >= context.canvas.height) {
-      //   console.log(velocity.y, y, context.canvas.height);
-      // }
-      //#endregion
       //#region Object Gravity
 
-      stationaries.forEach(({ x: fixedX, y: fixedY, mass: fixedMass }) => {
-        distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
-        xDistance = fixedX - movingX;
-        yDistance = fixedY - movingY;
-        const gravForce =
-          (gravityPower * fixedMass * movingMass) / distance ** 2;
+      stationaries.forEach(
+        ({
+          x: fixedX,
+          y: fixedY,
+          mass: fixedMass,
+          active: stationaryActive,
+        }) => {
+          if (!stationaryActive && stationaryActive != undefined) {
+            return;
+          }
+          distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
+          xDistance = fixedX - movingX;
+          yDistance = fixedY - movingY;
+          const gravForce =
+            (gravityPower * fixedMass * movingMass) / distance ** 2;
 
-        // Apply gravity force in proportion to the x/y distances
-        moving[index].velocity.x +=
-          (xDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
-          gravForce *
-          baseSpeed;
-        moving[index].velocity.y +=
-          (yDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
-          gravForce *
-          baseSpeed;
-      });
+          // Apply gravity force in proportion to the x/y distances
+          moving[index].velocity.x +=
+            (xDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+            gravForce *
+            baseSpeed;
+          moving[index].velocity.y +=
+            (yDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+            gravForce *
+            baseSpeed;
+        }
+      );
 
       moving.forEach(
-        ({ x: fixedX, y: fixedY, mass: fixedMass, index: fixedIndex }) => {
+        ({
+          x: fixedX,
+          y: fixedY,
+          mass: fixedMass,
+          index: fixedIndex,
+          active,
+        }) => {
           if (index === fixedIndex) {
+            return;
+          }
+          if (!active) {
             return;
           }
           distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
@@ -219,20 +291,45 @@ function calculateVelocity(elapsed) {
         }
       );
       //#endregion
-      //#endregion
       //#region Velocity Cap
       const velocityMagnitude = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
-      if (velocityMagnitude >= 10000) {
-        velocity.x *= 10000 / velocityMagnitude;
-        velocity.y *= 10000 / velocityMagnitude;
+      if (velocityMagnitude >= velocityCap) {
+        velocity.x *= velocityCap / velocityMagnitude;
+        velocity.y *= velocityCap / velocityMagnitude;
       }
+      //#endregion
+      //#region Play Whoosh
+      //   moving[index].velocityHistory.push({ ...velocity });
+      //   if (velocityHistory.length > 10) {
+      //     moving[index].velocityHistory.shift();
+      //     const firstVelocity = Math.sqrt(
+      //       velocityHistory[9].x ** 2 + velocityHistory[9].y ** 2
+      //     );
+      //     const lastVelocity = Math.sqrt(
+      //       velocityHistory[0].x ** 2 + velocityHistory[0].y ** 2
+      //     );
+      //     if (
+      //       firstVelocity - lastVelocity >= velocityToSound &&
+      //       !whooshIsPlaying
+      //     ) {
+      //       console.log("asfldkjasl;dkf");
+      //       whoosh.play();
+      //       whooshIsPlaying = true;
+      //     } else {
+      //       console.log(velocityHistory);
+      //     }
+      //   }
+
       //#endregion
     }
   );
 }
 
 function calculateMotion(elapsed) {
-  moving.forEach(function ({ velocity, index }) {
+  moving.forEach(function ({ velocity, index, active }) {
+    if (!active) {
+      return;
+    }
     moving[index].x += (velocity.x * baseSpeed * elapsed) / 1000;
     moving[index].y += (velocity.y * baseSpeed * elapsed) / 1000;
   });

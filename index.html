@@ -31,23 +31,17 @@
     </div>
     <div class="text-center mt-2">
       <button
-        class="btn btn-success me-3"
-        onclick="paused = false; window.requestAnimationFrame(updateCanvas)"
-      >
-        Start
-      </button>
-      <button
-        class="btn btn-primary mx-3"
+        class="btn btn-success mx-3"
         onclick="paused = !paused; window.requestAnimationFrame(updateCanvas)"
       >
-        Pause/Unpause</button
+        Start/Stop</button
       ><button class="btn btn-danger ms-3" onclick="reset()">Reset</button>
     </div>
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10 bg-secondary mt-2 rounded py-2 px-4">
-        <p class="fs-3">Settings</p>
-        <div class="text-center">
+      <div class="col-3"></div>
+      <div class="col-6 bg-secondary mt-2 rounded py-2 px-4">
+        <p class="fs-3">Control Center</p>
+        <div class="text-center mb-4">
           <div class="d-inline">
             <input
               type="range"
@@ -55,9 +49,9 @@
               id="gravitySlider"
               min="0"
               step="1"
-              max="60"
-              value="30"
-              name="Speed"
+              max="30"
+              value="15"
+              name="Gravity"
             />
             <label for="gravitySlider" class="ms-2">Gravity</label>
           </div>
@@ -74,6 +68,26 @@
             />
             <label for="speedSlider" class="ms-2">Speed</label>
           </div>
+        </div>
+        <div class="text-center">
+          <button class="btn me-3" id="toggle1" onclick="toggleMoving(0)">
+            Toggle</button
+          ><button class="btn mx-3" id="toggle2" onclick="toggleMoving(1)">
+            Toggle</button
+          ><button class="btn mx-3" id="toggle3" onclick="toggleMoving(2)">
+            Toggle</button
+          ><button
+            class="btn text-light ms-3"
+            id="toggle4"
+            onclick="toggleMoving(3)"
+          >
+            Toggle
+          </button>
+        </div>
+        <div class="text-center mt-2">
+          <button class="btn btn-warning" onclick="toggleSecondary()">
+            Toggle Secondary
+          </button>
         </div>
       </div>
     </div>
