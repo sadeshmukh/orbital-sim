@@ -2,6 +2,7 @@ let canvas = document.getElementById("theCanvas");
 let context = canvas.getContext("2d");
 let whoosh = new Audio("whoosh.wav");
 let whooshIsPlaying = false;
+let doesBounce = true;
 
 whoosh.addEventListener(
   "ended",
@@ -15,6 +16,7 @@ context.canvas.width = window.innerWidth - 50;
 context.canvas.height = window.innerHeight - 250;
 
 const bounceReduction = 1 / 3;
+const wrapReduction = 1 / 2;
 const bounceBuffer = 10;
 const velocityCap = 10000;
 const velocityHistoryLength = 10;
@@ -33,7 +35,7 @@ const initialStationaries = [
     name: "sun",
     x: (1 / 2) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
-    mass: 10 * 10 ** 2,
+    mass: 1000,
     radius: 30,
     // color: "#f7f7f7",
     color: "#ddff66",
@@ -42,7 +44,7 @@ const initialStationaries = [
     name: "noice",
     x: (3 / 4) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
-    mass: 5 * 10 ** 2,
+    mass: 500,
     radius: 25,
     // color: "#f7f7f7",
     color: "#ddff66",
@@ -52,7 +54,7 @@ const initialStationaries = [
     name: "noice2mee2",
     x: (1 / 4) * context.canvas.width,
     y: (1 / 2) * context.canvas.height,
-    mass: 5 * 10 ** 2,
+    mass: 500,
     radius: 25,
     // color: "#f7f7f7",
     color: "#ddff66",
@@ -119,6 +121,10 @@ let stationaries = JSON.parse(JSON.stringify(initialStationaries));
 
 let moving = JSON.parse(JSON.stringify(initialMoving));
 
+function toggleBounce() {
+  doesBounce = !doesBounce;
+}
+
 function toggleSecondary() {
   stationaries[1].active = !stationaries[1].active;
   stationaries[2].active = !stationaries[2].active;
@@ -151,6 +157,7 @@ function reset() {
   speedSlider.value = (speedSlider.min + speedSlider.max) / 2;
   gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
   gravitySlider.value = (gravitySlider.min + gravitySlider.max) / 2;
+  doesBounce = true;
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
@@ -199,36 +206,63 @@ function calculateVelocity(elapsed) {
       if (!active) {
         return;
       }
-      //#region Bouncing
-      if (
-        movingY + radius + bounceBuffer >= context.canvas.height &&
-        velocity.y >= 0
-      ) {
-        moving[index].velocity.y *= bounceReduction;
+      if (doesBounce) {
+        //#region Bouncing
+        if (
+          movingY + radius + bounceBuffer >= context.canvas.height &&
+          velocity.y >= 0
+        ) {
+          moving[index].velocity.y *= bounceReduction;
 
-        moving[index].velocity.y = -1 * moving[index].velocity.y;
+          moving[index].velocity.y = -moving[index].velocity.y;
+        }
+
+        if (movingY - radius - bounceBuffer <= 0 && velocity.y <= 0) {
+          moving[index].velocity.y *= bounceReduction;
+
+          moving[index].velocity.y = -moving[index].velocity.y;
+        }
+        if (
+          movingX + radius + bounceBuffer >= context.canvas.width &&
+          velocity.x >= 0
+        ) {
+          moving[index].velocity.x *= bounceReduction;
+
+          moving[index].velocity.x = -moving[index].velocity.x;
+        }
+
+        if (movingX - radius - bounceBuffer <= 0 && velocity.x <= 0) {
+          moving[index].velocity.x *= bounceReduction;
+
+          moving[index].velocity.x = -moving[index].velocity.x;
+        }
+        //#endregion
+      } else {
+        //#region Wrap
+        if (movingY + radius >= context.canvas.height && velocity.y >= 0) {
+          moving[index].velocity.y *= wrapReduction;
+          moving[index].y -= context.canvas.height;
+          moving[index].velocity.x = -moving[index].velocity.x;
+        }
+
+        if (movingY - radius <= 0 && velocity.y <= 0) {
+          moving[index].velocity.y *= wrapReduction;
+          moving[index].y += context.canvas.height;
+          moving[index].velocity.x = -moving[index].velocity.x;
+        }
+        if (movingX + radius >= context.canvas.width && velocity.x >= 0) {
+          moving[index].velocity.x *= wrapReduction;
+          moving[index].x -= context.canvas.width;
+          moving[index].velocity.y = -moving[index].velocity.y;
+        }
+
+        if (movingX - radius <= 0 && velocity.x <= 0) {
+          moving[index].velocity.x *= wrapReduction;
+          moving[index].x += context.canvas.width;
+          moving[index].velocity.y = -moving[index].velocity.y;
+        }
+        //#endregion
       }
-
-      if (movingY - radius - bounceBuffer <= 0 && velocity.y <= 0) {
-        moving[index].velocity.y *= bounceReduction;
-
-        moving[index].velocity.y = -moving[index].velocity.y;
-      }
-      if (
-        movingX + radius + bounceBuffer >= context.canvas.width &&
-        velocity.x >= 0
-      ) {
-        moving[index].velocity.x *= bounceReduction;
-
-        moving[index].velocity.x = -moving[index].velocity.x;
-      }
-
-      if (movingX - radius - bounceBuffer <= 0 && velocity.x <= 0) {
-        moving[index].velocity.x *= bounceReduction;
-
-        moving[index].velocity.x = -moving[index].velocity.x;
-      }
-      //#endregion
       //#region Object Gravity
 
       stationaries.forEach(
@@ -244,8 +278,8 @@ function calculateVelocity(elapsed) {
           distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
           xDistance = fixedX - movingX;
           yDistance = fixedY - movingY;
-          const gravForce =
-            (gravityPower * fixedMass * movingMass) / distance ** 2;
+          // Not technically gravitational force, but the movingMass cancels out since the force has to also move that mass
+          const gravForce = (gravityPower * fixedMass) / distance ** 2;
 
           // Apply gravity force in proportion to the x/y distances
           moving[index].velocity.x +=
@@ -276,8 +310,8 @@ function calculateVelocity(elapsed) {
           distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
           xDistance = fixedX - movingX;
           yDistance = fixedY - movingY;
-          const gravForce =
-            (gravityPower * fixedMass * movingMass) / distance ** 2;
+          // Not technically gravitational force, but the fixedMass cancels out since the force has to also move that mass
+          const gravForce = (gravityPower * fixedMass) / distance ** 2;
 
           // Apply gravity force in proportion to the x/y distances
           moving[index].velocity.x +=

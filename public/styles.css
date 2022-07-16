@@ -13,3 +13,8 @@
 #toggle4 {
   background-color: #6c0ba9;
 }
+
+#theCanvas {
+  background-color: black;
+  background-image: url("asfalt-light.png");
+}
