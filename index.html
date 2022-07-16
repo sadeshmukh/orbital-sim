@@ -32,15 +32,17 @@
     </div>
     <div class="text-center mt-2">
       <button
-        class="btn btn-success mx-3"
+        class="btn btn-success btn-lg mx-3"
         onclick="paused = !paused; window.requestAnimationFrame(updateCanvas)"
       >
         Start/Stop</button
-      ><button class="btn btn-danger ms-3" onclick="reset()">Reset</button>
+      ><button class="btn btn-danger btn-lg ms-3" onclick="reset()">
+        Reset
+      </button>
     </div>
     <div class="row">
-      <div class="col-3"></div>
-      <div class="col-6 bg-secondary mt-2 rounded py-2 px-4">
+      <div class="md-hidden col-lg-3"></div>
+      <div class="col-lg-6 col-md-12 bg-secondary mt-2 rounded py-2 px-4">
         <p class="fs-3">Control Center</p>
         <div class="text-center mb-4">
           <div class="row">
