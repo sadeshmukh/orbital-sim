@@ -2,12 +2,14 @@ let canvas = document.getElementById("theCanvas");
 let context = canvas.getContext("2d");
 
 context.canvas.width = window.innerWidth - 50;
-context.canvas.height = window.innerHeight - 200;
+context.canvas.height = window.innerHeight - 250;
 
-const gravityPower = 6.6743 * 5;
 const bounceReduction = 1 / 3;
 let paused = true;
 const speedSlider = document.getElementById("speedSlider");
+const gravitySlider = document.getElementById("gravitySlider");
+
+let gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
 let baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
 
 let start, previousTimeStamp;
@@ -73,8 +75,12 @@ let stationaries = JSON.parse(JSON.stringify(initialStationaries));
 
 let moving = JSON.parse(JSON.stringify(initialMoving));
 
-function updateInput() {
+function updateSpeedInput() {
   baseSpeed = 0.2 * speedSlider.value;
+}
+
+function updateGravityInput() {
+  gravityPower = gravitySlider.value;
 }
 
 function reset() {
@@ -86,6 +92,8 @@ function reset() {
   console.log((speedSlider.min + speedSlider.max) / 2);
   baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
   speedSlider.value = (speedSlider.min + speedSlider.max) / 2;
+  gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
+  gravitySlider.value = (gravitySlider.min + gravitySlider.max) / 2;
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
@@ -187,6 +195,29 @@ function calculateVelocity(elapsed) {
           gravForce *
           baseSpeed;
       });
+
+      moving.forEach(
+        ({ x: fixedX, y: fixedY, mass: fixedMass, index: fixedIndex }) => {
+          if (index === fixedIndex) {
+            return;
+          }
+          distance = calculateDistance([fixedX, fixedY], [movingX, movingY]);
+          xDistance = fixedX - movingX;
+          yDistance = fixedY - movingY;
+          const gravForce =
+            (gravityPower * fixedMass * movingMass) / distance ** 2;
+
+          // Apply gravity force in proportion to the x/y distances
+          moving[index].velocity.x +=
+            (xDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+            gravForce *
+            baseSpeed;
+          moving[index].velocity.y +=
+            (yDistance / (Math.abs(xDistance) + Math.abs(yDistance))) *
+            gravForce *
+            baseSpeed;
+        }
+      );
       //#endregion
       //#endregion
       //#region Velocity Cap

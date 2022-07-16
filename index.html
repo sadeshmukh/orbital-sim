@@ -29,7 +29,7 @@
         >get a good browser smh</canvas
       >
     </div>
-    <div class="text-center">
+    <div class="text-center mt-2">
       <button
         class="btn btn-success me-3"
         onclick="paused = false; window.requestAnimationFrame(updateCanvas)"
@@ -43,16 +43,39 @@
         Pause/Unpause</button
       ><button class="btn btn-danger ms-3" onclick="reset()">Reset</button>
     </div>
-    <div class="text-center">
-      <input
-        type="range"
-        oninput="updateInput()"
-        id="speedSlider"
-        min="0"
-        step="0.125"
-        max="2"
-        value="1"
-      />
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-10 bg-secondary mt-2 rounded py-2 px-4">
+        <p class="fs-3">Settings</p>
+        <div class="text-center">
+          <div class="d-inline">
+            <input
+              type="range"
+              oninput="updateGravityInput()"
+              id="gravitySlider"
+              min="0"
+              step="1"
+              max="60"
+              value="30"
+              name="Speed"
+            />
+            <label for="gravitySlider" class="ms-2">Gravity</label>
+          </div>
+          <div class="ms-1 d-inline">
+            <input
+              type="range"
+              oninput="updateSpeedInput()"
+              id="speedSlider"
+              min="0"
+              step="0.125"
+              max="2"
+              value="1"
+              name="Speed"
+            />
+            <label for="speedSlider" class="ms-2">Speed</label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script
