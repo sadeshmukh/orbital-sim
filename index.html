@@ -71,8 +71,22 @@
                 />
                 <label for="speedSlider" class="ms-2">Speed</label>
               </div>
+
+              <div class="mt-2">
+                <input
+                  type="range"
+                  oninput="updateTrailInput()"
+                  id="trailSlider"
+                  min="0"
+                  step="5"
+                  max="600"
+                  value="60"
+                  name="Trail Length"
+                />
+                <label for="trailSlider" class="ms-2">Trail Length</label>
+              </div>
             </div>
-            <div class="col-4 text-center">
+            <div class="col-4 text-center d-block my-auto">
               <div class="row">
                 <div class="col-6 text-center">
                   <button class="btn" id="toggle1" onclick="toggleMoving(0)">
@@ -101,11 +115,30 @@
               </div>
             </div>
             <div class="col-4 text-center">
-              <button class="btn btn-warning" onclick="toggleSecondary()">
-                Toggle Secondary</button
-              ><button class="btn btn-success mt-3" onclick="toggleBounce()">
-                Toggle Bounce
-              </button>
+              <div>
+                <button
+                  class="btn btn-warning btn-sm"
+                  onclick="toggleSecondary()"
+                >
+                  Toggle Secondary
+                </button>
+              </div>
+              <div>
+                <button
+                  class="btn btn-success mt-3 btn-sm"
+                  onclick="toggleBounce()"
+                >
+                  Toggle Bounce
+                </button>
+              </div>
+              <div>
+                <button
+                  class="btn btn-success mt-3 btn-sm"
+                  onclick="toggleTrails()"
+                >
+                  Toggle Trails
+                </button>
+              </div>
             </div>
           </div>
         </div>

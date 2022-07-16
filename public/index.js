@@ -3,6 +3,8 @@ let context = canvas.getContext("2d");
 let whoosh = new Audio("whoosh.wav");
 let whooshIsPlaying = false;
 let doesBounce = true;
+let frameCount = 0;
+let showTrails = true;
 
 whoosh.addEventListener(
   "ended",
@@ -28,6 +30,14 @@ const gravitySlider = document.getElementById("gravitySlider");
 let gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
 let baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
 
+const trailSlider = document.getElementById("trailSlider");
+
+const positionHistoryDotRadius = 3;
+const positionHistoryFrameGap = 1;
+const defaultPositionHistoryLength = trailSlider.value;
+const positionHistoryMaxLength = trailSlider.max;
+let positionHistoryLength = defaultPositionHistoryLength;
+
 let start, previousTimeStamp;
 
 const initialStationaries = [
@@ -38,7 +48,7 @@ const initialStationaries = [
     mass: 1000,
     radius: 30,
     // color: "#f7f7f7",
-    color: "#ddff66",
+    color: "rgba(221, 255, 102, 1)",
   },
   {
     name: "noice",
@@ -47,7 +57,7 @@ const initialStationaries = [
     mass: 500,
     radius: 25,
     // color: "#f7f7f7",
-    color: "#ddff66",
+    color: "rgba(221, 255, 102, 1)",
     active: false,
   },
   {
@@ -57,7 +67,7 @@ const initialStationaries = [
     mass: 500,
     radius: 25,
     // color: "#f7f7f7",
-    color: "#ddff66",
+    color: "rgba(221, 255, 102, 1)",
     active: false,
   },
 ];
@@ -69,12 +79,13 @@ const initialMoving = [
     y: (1 / 4) * context.canvas.height,
     radius: 15,
     // color: "#d3d3d3",
-    color: "#55aabb",
+    color: "rgba(85, 170, 187, 1)",
     velocity: { x: 0, y: 0 },
     mass: 200,
     index: 0,
     active: true,
     velocityHistory: [],
+    positionHistory: [],
   },
   {
     name: "second",
@@ -82,12 +93,13 @@ const initialMoving = [
     y: (3 / 4) * context.canvas.height,
     radius: 17.5,
     // color: "#800020",
-    color: "#bb3388",
+    color: "rgba(187, 51, 136, 1)",
     velocity: { x: 0, y: 0 },
     mass: 300,
     index: 1,
     active: false,
     velocityHistory: [],
+    positionHistory: [],
   },
   {
     name: "third",
@@ -95,12 +107,13 @@ const initialMoving = [
     y: (1 / 4) * context.canvas.height,
     radius: 20,
     // color: "#800020",
-    color: "#f7f7f7",
+    color: "rgba(247, 247, 247, 1)",
     velocity: { x: 0, y: 0 },
     mass: 400,
     index: 2,
     active: false,
     velocityHistory: [],
+    positionHistory: [],
   },
   {
     name: "fourth",
@@ -108,12 +121,13 @@ const initialMoving = [
     y: (3 / 4) * context.canvas.height,
     radius: 22.5,
     // color: "#800020",
-    color: "#6C0BA9",
+    color: "rgba(108, 11, 169, 1)",
     velocity: { x: 0, y: 0 },
     mass: 500,
     index: 3,
     active: true,
     velocityHistory: [],
+    positionHistory: [],
   },
 ];
 
@@ -123,6 +137,10 @@ let moving = JSON.parse(JSON.stringify(initialMoving));
 
 function toggleBounce() {
   doesBounce = !doesBounce;
+}
+
+function toggleTrails() {
+  showTrails = !showTrails;
 }
 
 function toggleSecondary() {
@@ -136,6 +154,10 @@ function toggleMoving(index) {
   moving[index].active = !moving[index].active;
   clearCanvas();
   drawAll();
+}
+
+function updateTrailInput() {
+  positionHistoryLength = trailSlider.value;
 }
 
 function updateSpeedInput() {
@@ -158,6 +180,8 @@ function reset() {
   gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
   gravitySlider.value = (gravitySlider.min + gravitySlider.max) / 2;
   doesBounce = true;
+  trailSlider.value = defaultPositionHistoryLength;
+  positionHistoryLength = defaultPositionHistoryLength;
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
@@ -168,8 +192,32 @@ function drawCircle(x, y, radius, color) {
   context.beginPath();
   context.fillStyle = color;
   context.arc(x, y, radius, 0, 2 * Math.PI);
+
   context.fill();
   context.closePath();
+}
+
+function drawHistory(positionHistory, color) {
+  //   if (positionHistory.length > 0) {
+  //     positionHistory.forEach(([x, y]) => {
+  //       drawCircle(x, y, positionHistoryDotRadius, color);
+  //     });
+  //   }
+  let newPosHistory = JSON.parse(JSON.stringify(positionHistory));
+  newPosHistory.reverse();
+  newPosHistory = newPosHistory.slice(0, positionHistoryLength);
+  for (let i = 0; i < positionHistoryLength; i++) {
+    let dotFade = 1 - i / newPosHistory.length;
+    console.log(defaultPositionHistoryLength, positionHistoryLength);
+    if (newPosHistory[i]) {
+      drawCircle(
+        newPosHistory[i][0],
+        newPosHistory[i][1],
+        positionHistoryDotRadius,
+        color.replace(/[^,]+(?=\))/, dotFade.toString())
+      );
+    }
+  }
 }
 
 function drawAll() {
@@ -179,10 +227,14 @@ function drawAll() {
     }
     drawCircle(x, y, radius, color);
   });
-  moving.forEach(function ({ x, y, radius, color, active }) {
+  moving.forEach(function ({ x, y, radius, color, active, positionHistory }) {
     if (!active) {
       return;
     }
+    if (showTrails) {
+      drawHistory(positionHistory, color);
+    }
+
     drawCircle(x, y, radius, color);
   });
 }
@@ -366,6 +418,12 @@ function calculateMotion(elapsed) {
     }
     moving[index].x += (velocity.x * baseSpeed * elapsed) / 1000;
     moving[index].y += (velocity.y * baseSpeed * elapsed) / 1000;
+    if (frameCount % positionHistoryFrameGap === 0) {
+      moving[index].positionHistory.push([moving[index].x, moving[index].y]);
+      if (moving[index].positionHistory.length > positionHistoryMaxLength) {
+        moving[index].positionHistory.shift();
+      }
+    }
   });
 }
 
@@ -381,6 +439,7 @@ function updateCanvas(timestamp) {
   start = timestamp;
 
   if (!paused) {
+    frameCount += 1;
     clearCanvas();
     calculateMotion(elapsed);
     calculateVelocity(elapsed);
