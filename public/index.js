@@ -15,7 +15,7 @@ whoosh.addEventListener(
 );
 
 context.canvas.width = window.innerWidth - 50;
-context.canvas.height = window.innerHeight - 250;
+context.canvas.height = window.innerHeight - 150;
 
 const bounceReduction = 1 / 3;
 const wrapReduction = 1 / 2;
@@ -40,36 +40,81 @@ let positionHistoryLength = defaultPositionHistoryLength;
 
 let start, previousTimeStamp;
 
-const initialStationaries = [
-  {
-    name: "sun",
-    x: (1 / 2) * context.canvas.width,
-    y: (1 / 2) * context.canvas.height,
-    mass: 1000,
-    radius: 30,
-    // color: "#f7f7f7",
-    color: "rgba(221, 255, 102, 1)",
-  },
-  {
-    name: "noice",
-    x: (3 / 4) * context.canvas.width,
-    y: (1 / 2) * context.canvas.height,
-    mass: 500,
-    radius: 25,
-    // color: "#f7f7f7",
-    color: "rgba(221, 255, 102, 1)",
-    active: false,
-  },
-  {
-    name: "noice2mee2",
-    x: (1 / 4) * context.canvas.width,
-    y: (1 / 2) * context.canvas.height,
-    mass: 500,
-    radius: 25,
-    // color: "#f7f7f7",
-    color: "rgba(221, 255, 102, 1)",
-    active: false,
-  },
+const configSelect = document.getElementById("configSelect");
+
+const stationaryConfigs = [
+  [
+    {
+      name: "sun",
+      x: (1 / 2) * context.canvas.width,
+      y: (1 / 2) * context.canvas.height,
+      mass: 1000,
+      radius: 30,
+      // color: "#f7f7f7",
+      // should be rgba(221, 255, 102, 1)
+      // rgba(0, 0, 0, 0)
+      // 000
+      color: "rgba(0, 0, 0, 0)",
+    },
+  ],
+  [
+    {
+      name: "dual1",
+      x: (3 / 4) * context.canvas.width,
+      y: (1 / 2) * context.canvas.height,
+      mass: 500,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+    {
+      name: "dual2",
+      x: (1 / 4) * context.canvas.width,
+      y: (1 / 2) * context.canvas.height,
+      mass: 500,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+  ],
+  [
+    {
+      name: "quad1",
+      x: (2 / 7) * context.canvas.width,
+      y: (2 / 7) * context.canvas.height,
+      mass: 400,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+    {
+      name: "quad2",
+      x: (5 / 7) * context.canvas.width,
+      y: (2 / 7) * context.canvas.height,
+      mass: 400,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+    {
+      name: "quad3",
+      x: (2 / 7) * context.canvas.width,
+      y: (5 / 7) * context.canvas.height,
+      mass: 400,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+    {
+      name: "quad3",
+      x: (5 / 7) * context.canvas.width,
+      y: (5 / 7) * context.canvas.height,
+      mass: 400,
+      radius: 25,
+      // color: "#f7f7f7",
+      color: "rgba(0, 0, 0, 0)",
+    },
+  ],
 ];
 
 const initialMoving = [
@@ -77,7 +122,7 @@ const initialMoving = [
     name: "main",
     x: (3 / 4) * context.canvas.width,
     y: (1 / 4) * context.canvas.height,
-    radius: 15,
+    radius: 10,
     // color: "#d3d3d3",
     color: "rgba(85, 170, 187, 1)",
     velocity: { x: 0, y: 0 },
@@ -91,7 +136,7 @@ const initialMoving = [
     name: "second",
     x: (1 / 4) * context.canvas.width,
     y: (3 / 4) * context.canvas.height,
-    radius: 17.5,
+    radius: 12,
     // color: "#800020",
     color: "rgba(187, 51, 136, 1)",
     velocity: { x: 0, y: 0 },
@@ -105,7 +150,7 @@ const initialMoving = [
     name: "third",
     x: (1 / 4) * context.canvas.width,
     y: (1 / 4) * context.canvas.height,
-    radius: 20,
+    radius: 13,
     // color: "#800020",
     color: "rgba(247, 247, 247, 1)",
     velocity: { x: 0, y: 0 },
@@ -119,7 +164,7 @@ const initialMoving = [
     name: "fourth",
     x: (3 / 4) * context.canvas.width,
     y: (3 / 4) * context.canvas.height,
-    radius: 22.5,
+    radius: 15,
     // color: "#800020",
     color: "rgba(108, 11, 169, 1)",
     velocity: { x: 0, y: 0 },
@@ -131,9 +176,15 @@ const initialMoving = [
   },
 ];
 
-let stationaries = JSON.parse(JSON.stringify(initialStationaries));
+let stationaries = JSON.parse(JSON.stringify(stationaryConfigs[0]));
 
 let moving = JSON.parse(JSON.stringify(initialMoving));
+
+function changeConfig(config) {
+  stationaries = JSON.parse(JSON.stringify(stationaryConfigs[config]));
+  clearCanvas();
+  drawAll();
+}
 
 function toggleBounce() {
   doesBounce = !doesBounce;
@@ -141,13 +192,6 @@ function toggleBounce() {
 
 function toggleTrails() {
   showTrails = !showTrails;
-}
-
-function toggleSecondary() {
-  stationaries[1].active = !stationaries[1].active;
-  stationaries[2].active = !stationaries[2].active;
-  clearCanvas();
-  drawAll();
 }
 
 function toggleMoving(index) {
@@ -171,7 +215,7 @@ function updateGravityInput() {
 function reset() {
   paused = true;
   moving = JSON.parse(JSON.stringify(initialMoving));
-  stationaries = JSON.parse(JSON.stringify(initialStationaries));
+  stationaries = JSON.parse(JSON.stringify(stationaryConfigs[0]));
   clearCanvas();
   drawAll();
   console.log((speedSlider.min + speedSlider.max) / 2);
@@ -182,6 +226,7 @@ function reset() {
   doesBounce = true;
   trailSlider.value = defaultPositionHistoryLength;
   positionHistoryLength = defaultPositionHistoryLength;
+  configSelect.value = 0;
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
@@ -208,7 +253,6 @@ function drawHistory(positionHistory, color) {
   newPosHistory = newPosHistory.slice(0, positionHistoryLength);
   for (let i = 0; i < positionHistoryLength; i++) {
     let dotFade = 1 - i / newPosHistory.length;
-    console.log(defaultPositionHistoryLength, positionHistoryLength);
     if (newPosHistory[i]) {
       drawCircle(
         newPosHistory[i][0],
@@ -294,24 +338,20 @@ function calculateVelocity(elapsed) {
         if (movingY + radius >= context.canvas.height && velocity.y >= 0) {
           moving[index].velocity.y *= wrapReduction;
           moving[index].y -= context.canvas.height;
-          moving[index].velocity.x = -moving[index].velocity.x;
         }
 
         if (movingY - radius <= 0 && velocity.y <= 0) {
           moving[index].velocity.y *= wrapReduction;
           moving[index].y += context.canvas.height;
-          moving[index].velocity.x = -moving[index].velocity.x;
         }
         if (movingX + radius >= context.canvas.width && velocity.x >= 0) {
           moving[index].velocity.x *= wrapReduction;
           moving[index].x -= context.canvas.width;
-          moving[index].velocity.y = -moving[index].velocity.y;
         }
 
         if (movingX - radius <= 0 && velocity.x <= 0) {
           moving[index].velocity.x *= wrapReduction;
           moving[index].x += context.canvas.width;
-          moving[index].velocity.y = -moving[index].velocity.y;
         }
         //#endregion
       }

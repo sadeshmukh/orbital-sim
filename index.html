@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+Mono:wght@100;200;400;600;800&family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:wght@500&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+Mono:wght@100;200;400;600;800&family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Open+Sans:wght@300;500;600;700;800&family=Roboto+Mono:wght@500&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -21,6 +21,152 @@
   </head>
   <body class="p-4 bg-dark text-light">
     <h1 class="text-center">2D Orbital Sim</h1>
+    <div
+      class="modal fade"
+      id="controlsModal"
+      tabindex="-1"
+      aria-labelledby="controlsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+          <div class="modal-header">
+            <h5 class="modal-title" id="controlsModalLabel">Control Center</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mt-2 rounded py-2 px-4">
+              <div class="mb-4">
+                <div class="row">
+                  <div class="col-4 d-block my-auto">
+                    <div>
+                      <input
+                        type="range"
+                        oninput="updateGravityInput()"
+                        id="gravitySlider"
+                        min="0"
+                        step="1000"
+                        max="30000"
+                        value="15000"
+                        name="Gravity"
+                      />
+                      <label for="gravitySlider" class="ms-2">Gravity</label>
+                    </div>
+                    <div class="mt-2">
+                      <input
+                        type="range"
+                        oninput="updateSpeedInput()"
+                        id="speedSlider"
+                        min="0"
+                        step="0.125"
+                        max="2"
+                        value="1"
+                        name="Speed"
+                      />
+                      <label for="speedSlider" class="ms-2">Speed</label>
+                    </div>
+
+                    <div class="mt-2">
+                      <input
+                        type="range"
+                        oninput="updateTrailInput()"
+                        id="trailSlider"
+                        min="0"
+                        step="5"
+                        max="600"
+                        value="60"
+                        name="Trail Length"
+                      />
+                      <label for="trailSlider" class="ms-2">Trail</label>
+                    </div>
+                  </div>
+                  <div class="col-4 text-center d-block my-auto">
+                    <div class="row">
+                      <div class="col-6 text-center">
+                        <button
+                          class="btn"
+                          id="toggle1"
+                          onclick="toggleMoving(0)"
+                        >
+                          Toggle
+                        </button>
+                      </div>
+                      <div class="col-6 text-center">
+                        <button
+                          class="btn"
+                          id="toggle2"
+                          onclick="toggleMoving(1)"
+                        >
+                          Toggle
+                        </button>
+                      </div>
+                      <div class="col-6 text-center mt-3">
+                        <button
+                          class="btn"
+                          id="toggle3"
+                          onclick="toggleMoving(2)"
+                        >
+                          Toggle
+                        </button>
+                      </div>
+                      <div class="col-6 text-center">
+                        <button
+                          class="btn text-light mt-3"
+                          id="toggle4"
+                          onclick="toggleMoving(3)"
+                        >
+                          Toggle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-4 text-center">
+                    <div>
+                      <select
+                        class="form-select"
+                        onchange="changeConfig(this.value)"
+                        id="configSelect"
+                      >
+                        <option value="0" selected>1 Star</option>
+                        <option value="1">2 Stars</option>
+                        <option value="2">4 Stars</option>
+                      </select>
+                    </div>
+                    <div>
+                      <button
+                        class="btn btn-lg btn-success mt-3 me-4"
+                        onclick="toggleBounce()"
+                      >
+                        Bounce</button
+                      ><button
+                        class="btn btn-lg btn-success mt-3"
+                        onclick="toggleTrails()"
+                      >
+                        Trails
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <!-- <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button> -->
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="text-center">
       <canvas
@@ -39,112 +185,14 @@
       ><button class="btn btn-danger btn-lg ms-3" onclick="reset()">
         Reset
       </button>
-    </div>
-    <div class="row">
-      <div class="md-hidden col-lg-3"></div>
-      <div class="col-lg-6 col-md-12 bg-secondary mt-2 rounded py-2 px-4">
-        <p class="fs-3">Control Center</p>
-        <div class="text-center mb-4">
-          <div class="row">
-            <div class="col-4 d-block my-auto">
-              <div>
-                <input
-                  type="range"
-                  oninput="updateGravityInput()"
-                  id="gravitySlider"
-                  min="0"
-                  step="1000"
-                  max="30000"
-                  value="15000"
-                  name="Gravity"
-                />
-                <label for="gravitySlider" class="ms-2">Gravity</label>
-              </div>
-              <div class="mt-2">
-                <input
-                  type="range"
-                  oninput="updateSpeedInput()"
-                  id="speedSlider"
-                  min="0"
-                  step="0.125"
-                  max="2"
-                  value="1"
-                  name="Speed"
-                />
-                <label for="speedSlider" class="ms-2">Speed</label>
-              </div>
-
-              <div class="mt-2">
-                <input
-                  type="range"
-                  oninput="updateTrailInput()"
-                  id="trailSlider"
-                  min="0"
-                  step="5"
-                  max="600"
-                  value="60"
-                  name="Trail Length"
-                />
-                <label for="trailSlider" class="ms-2">Trail Length</label>
-              </div>
-            </div>
-            <div class="col-4 text-center d-block my-auto">
-              <div class="row">
-                <div class="col-6 text-center">
-                  <button class="btn" id="toggle1" onclick="toggleMoving(0)">
-                    Toggle
-                  </button>
-                </div>
-                <div class="col-6 text-center">
-                  <button class="btn" id="toggle2" onclick="toggleMoving(1)">
-                    Toggle
-                  </button>
-                </div>
-                <div class="col-6 text-center mt-3">
-                  <button class="btn" id="toggle3" onclick="toggleMoving(2)">
-                    Toggle
-                  </button>
-                </div>
-                <div class="col-6 text-center">
-                  <button
-                    class="btn text-light mt-3"
-                    id="toggle4"
-                    onclick="toggleMoving(3)"
-                  >
-                    Toggle
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="col-4 text-center">
-              <div>
-                <button
-                  class="btn btn-warning btn-sm"
-                  onclick="toggleSecondary()"
-                >
-                  Toggle Secondary
-                </button>
-              </div>
-              <div>
-                <button
-                  class="btn btn-success mt-3 btn-sm"
-                  onclick="toggleBounce()"
-                >
-                  Toggle Bounce
-                </button>
-              </div>
-              <div>
-                <button
-                  class="btn btn-success mt-3 btn-sm"
-                  onclick="toggleTrails()"
-                >
-                  Toggle Trails
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <button
+        type="button"
+        class="btn btn-lg btn-secondary ms-4"
+        data-bs-toggle="modal"
+        data-bs-target="#controlsModal"
+      >
+        Controls
+      </button>
     </div>
 
     <script
