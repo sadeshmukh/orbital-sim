@@ -3,6 +3,9 @@
 <html>
   <head>
     <!-- public/ is read by the browser as / -->
+    <meta name="theme-color" content="#292b2c" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -16,7 +19,11 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
     <title>2D Orbital Sim</title>
+    <script src="sw-setup.js"></script>
   </head>
   <body class="px-4 py-2 bg-dark text-light">
     <h1 class="text-center">2D Orbital Sim</h1>
@@ -185,8 +192,17 @@
       >
     </div>
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-2 d-none d-lg-block">
+        <div class="py-4">
+          <span>Made By Sahil - </span>
+          <a
+            href="https://github.com/sadeshmukh/orbital-sim"
+            class="link-light text-center"
+            >Github Repo</a
+          >
+        </div>
+      </div>
+      <div class="col-lg-8 col-xs-10">
         <div class="text-center mt-2">
           <button
             class="btn btn-success btn-lg mx-3"
@@ -208,16 +224,13 @@
       </div>
       <div
         class="
-          col-1
+          col-2
           align-midddle align-middle-items
           justify-content-center
           text-center
         "
       >
-        <div
-          class="pe-2 text-center align-middle d-inline"
-          id="fpsCounter"
-        ></div>
+        <div class="pe-2 py-4 text-centere" id="fpsCounter"></div>
       </div>
     </div>
 
