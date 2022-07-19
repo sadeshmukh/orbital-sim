@@ -16,10 +16,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
-    <!-- <script src="resizeCanvas.js" /> -->
     <title>2D Orbital Sim</title>
   </head>
-  <body class="p-4 bg-dark text-light">
+  <body class="px-4 py-2 bg-dark text-light">
     <h1 class="text-center">2D Orbital Sim</h1>
     <div
       class="modal fade"
@@ -135,6 +134,7 @@
                         <option value="0" selected>1 Star</option>
                         <option value="1">2 Stars</option>
                         <option value="2">4 Stars</option>
+                        <option value="3">None</option>
                       </select>
                     </div>
                     <div>
@@ -148,6 +148,14 @@
                         onclick="toggleTrails()"
                       >
                         Trails
+                      </button>
+                    </div>
+                    <div>
+                      <button
+                        class="btn btn-lg btn-outline-light mt-3"
+                        onclick="toggleBlackHoleMode()"
+                      >
+                        Black Hole Mode
                       </button>
                     </div>
                   </div>
@@ -176,23 +184,41 @@
         >get a good browser smh</canvas
       >
     </div>
-    <div class="text-center mt-2">
-      <button
-        class="btn btn-success btn-lg mx-3"
-        onclick="paused = !paused; window.requestAnimationFrame(updateCanvas)"
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="text-center mt-2">
+          <button
+            class="btn btn-success btn-lg mx-3"
+            onclick="paused = !paused; window.requestAnimationFrame(updateCanvas)"
+          >
+            Start/Stop</button
+          ><button class="btn btn-danger btn-lg ms-3" onclick="reset()">
+            Reset
+          </button>
+          <button
+            type="button"
+            class="btn btn-lg btn-secondary ms-4"
+            data-bs-toggle="modal"
+            data-bs-target="#controlsModal"
+          >
+            Controls
+          </button>
+        </div>
+      </div>
+      <div
+        class="
+          col-1
+          align-midddle align-middle-items
+          justify-content-center
+          text-center
+        "
       >
-        Start/Stop</button
-      ><button class="btn btn-danger btn-lg ms-3" onclick="reset()">
-        Reset
-      </button>
-      <button
-        type="button"
-        class="btn btn-lg btn-secondary ms-4"
-        data-bs-toggle="modal"
-        data-bs-target="#controlsModal"
-      >
-        Controls
-      </button>
+        <div
+          class="pe-2 text-center align-middle d-inline"
+          id="fpsCounter"
+        ></div>
+      </div>
     </div>
 
     <script

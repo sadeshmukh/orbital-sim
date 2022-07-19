@@ -5,6 +5,7 @@ let whooshIsPlaying = false;
 let doesBounce = true;
 let frameCount = 0;
 let showTrails = true;
+let blackHoleMode = false;
 
 whoosh.addEventListener(
   "ended",
@@ -22,6 +23,7 @@ const wrapReduction = 1 / 2;
 const bounceBuffer = 10;
 const velocityCap = 10000;
 const velocityHistoryLength = 10;
+const velocityCapExceptionRadius = 3 / 4;
 const velocityToSound = 3000;
 let paused = true;
 const speedSlider = document.getElementById("speedSlider");
@@ -40,6 +42,16 @@ let positionHistoryLength = defaultPositionHistoryLength;
 
 let start, previousTimeStamp;
 
+const elapsedCap = 16 * 4;
+const elapsedCapTo = 16;
+
+const fpsCounter = document.getElementById("fpsCounter");
+
+let elapsedHistory = [];
+const fpsLogFrameGap = 30;
+let fps = 60;
+const fpsRoundToPlace = 1;
+
 const configSelect = document.getElementById("configSelect");
 
 const stationaryConfigs = [
@@ -54,7 +66,7 @@ const stationaryConfigs = [
       // should be rgba(221, 255, 102, 1)
       // rgba(0, 0, 0, 0)
       // 000
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
   ],
   [
@@ -62,19 +74,19 @@ const stationaryConfigs = [
       name: "dual1",
       x: (3 / 4) * context.canvas.width,
       y: (1 / 2) * context.canvas.height,
-      mass: 500,
+      mass: 750,
       radius: 25,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
     {
       name: "dual2",
       x: (1 / 4) * context.canvas.width,
       y: (1 / 2) * context.canvas.height,
-      mass: 500,
+      mass: 750,
       radius: 25,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
   ],
   [
@@ -82,50 +94,52 @@ const stationaryConfigs = [
       name: "quad1",
       x: (2 / 7) * context.canvas.width,
       y: (2 / 7) * context.canvas.height,
-      mass: 400,
-      radius: 25,
+      mass: 600,
+      radius: 20,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
     {
       name: "quad2",
       x: (5 / 7) * context.canvas.width,
       y: (2 / 7) * context.canvas.height,
-      mass: 400,
-      radius: 25,
+      mass: 600,
+      radius: 20,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
     {
       name: "quad3",
       x: (2 / 7) * context.canvas.width,
       y: (5 / 7) * context.canvas.height,
-      mass: 400,
-      radius: 25,
+      mass: 600,
+      radius: 20,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
     {
       name: "quad3",
       x: (5 / 7) * context.canvas.width,
       y: (5 / 7) * context.canvas.height,
-      mass: 400,
-      radius: 25,
+      mass: 600,
+      radius: 20,
       // color: "#f7f7f7",
-      color: "rgba(0, 0, 0, 0)",
+      color: "rgba(221, 255, 102, 1)",
     },
   ],
+  [],
 ];
+// Keep last array empty
 
 const initialMoving = [
   {
     name: "main",
-    x: (3 / 4) * context.canvas.width,
+    x: (1 / 4) * context.canvas.width,
     y: (1 / 4) * context.canvas.height,
     radius: 10,
     // color: "#d3d3d3",
     color: "rgba(85, 170, 187, 1)",
-    velocity: { x: 0, y: 0 },
+    velocity: { x: 0, y: 1000 },
     mass: 200,
     index: 0,
     active: true,
@@ -134,12 +148,12 @@ const initialMoving = [
   },
   {
     name: "second",
-    x: (1 / 4) * context.canvas.width,
-    y: (3 / 4) * context.canvas.height,
+    x: (3 / 4) * context.canvas.width,
+    y: (1 / 4) * context.canvas.height,
     radius: 12,
     // color: "#800020",
     color: "rgba(187, 51, 136, 1)",
-    velocity: { x: 0, y: 0 },
+    velocity: { x: 0, y: 1000 },
     mass: 300,
     index: 1,
     active: false,
@@ -149,11 +163,11 @@ const initialMoving = [
   {
     name: "third",
     x: (1 / 4) * context.canvas.width,
-    y: (1 / 4) * context.canvas.height,
+    y: (3 / 4) * context.canvas.height,
     radius: 13,
     // color: "#800020",
     color: "rgba(247, 247, 247, 1)",
-    velocity: { x: 0, y: 0 },
+    velocity: { x: 0, y: -1000 },
     mass: 400,
     index: 2,
     active: false,
@@ -167,7 +181,7 @@ const initialMoving = [
     radius: 15,
     // color: "#800020",
     color: "rgba(108, 11, 169, 1)",
-    velocity: { x: 0, y: 0 },
+    velocity: { x: 0, y: -1000 },
     mass: 500,
     index: 3,
     active: true,
@@ -184,6 +198,10 @@ function changeConfig(config) {
   stationaries = JSON.parse(JSON.stringify(stationaryConfigs[config]));
   clearCanvas();
   drawAll();
+}
+
+function toggleBlackHoleMode() {
+  blackHoleMode = !blackHoleMode;
 }
 
 function toggleBounce() {
@@ -212,13 +230,20 @@ function updateGravityInput() {
   gravityPower = gravitySlider.value;
 }
 
+function updateFPS(fps) {
+  fpsCounter.innerHTML = fps.toString() + " FPS";
+}
+
+function clearFPS() {
+  fpsCounter.innerHTML = "";
+}
+
 function reset() {
   paused = true;
   moving = JSON.parse(JSON.stringify(initialMoving));
   stationaries = JSON.parse(JSON.stringify(stationaryConfigs[0]));
   clearCanvas();
   drawAll();
-  console.log((speedSlider.min + speedSlider.max) / 2);
   baseSpeed = ((speedSlider.min + speedSlider.max) / 2) * 0.2;
   speedSlider.value = (speedSlider.min + speedSlider.max) / 2;
   gravityPower = (gravitySlider.min + gravitySlider.max) / 2;
@@ -227,6 +252,7 @@ function reset() {
   trailSlider.value = defaultPositionHistoryLength;
   positionHistoryLength = defaultPositionHistoryLength;
   configSelect.value = 0;
+  clearFPS();
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
@@ -267,6 +293,10 @@ function drawHistory(positionHistory, color) {
 function drawAll() {
   stationaries.forEach(function ({ x, y, radius, color, active }) {
     if (!active && active != undefined) {
+      return;
+    }
+    if (blackHoleMode) {
+      drawCircle(x, y, radius, "rgba(0, 0, 0, 0)");
       return;
     }
     drawCircle(x, y, radius, color);
@@ -418,11 +448,29 @@ function calculateVelocity(elapsed) {
       );
       //#endregion
       //#region Velocity Cap
+      let isNearStationary = false;
+      stationaries.forEach(({ x: fixedX, y: fixedY, radius: fixedRadius }) => {
+        if (
+          calculateDistance([movingX, movingY], [fixedX, fixedY]) <
+          velocityCapExceptionRadius * fixedRadius
+        ) {
+          isNearStationary = true;
+        } else {
+        }
+      });
       const velocityMagnitude = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
-      if (velocityMagnitude >= velocityCap) {
-        velocity.x *= velocityCap / velocityMagnitude;
-        velocity.y *= velocityCap / velocityMagnitude;
+
+      if (
+        !isNearStationary &&
+        velocityMagnitude < context.canvas.height / 2 &&
+        velocityMagnitude < context.canvas.width / 2
+      ) {
+        if (velocityMagnitude >= velocityCap) {
+          velocity.x *= velocityCap / velocityMagnitude;
+          velocity.y *= velocityCap / velocityMagnitude;
+        }
       }
+
       //#endregion
       //#region Play Whoosh
       //   moving[index].velocityHistory.push({ ...velocity });
@@ -473,18 +521,29 @@ function updateCanvas(timestamp) {
   }
 
   let elapsed = timestamp - start;
-  if (elapsed > 100) {
-    elapsed = 10;
+  if (elapsed > elapsedCap) {
+    elapsed = elapsedCapTo;
   }
   start = timestamp;
 
   if (!paused) {
     frameCount += 1;
+    elapsedHistory.push(elapsed);
+    if (frameCount % fpsLogFrameGap === 0) {
+      fps =
+        1000 / (elapsedHistory.reduce((a, b) => a + b) / elapsedHistory.length);
+      updateFPS(
+        Math.round(fps * 10 ** fpsRoundToPlace) / 10 ** fpsRoundToPlace
+      );
+      elapsedHistory = [];
+    }
     clearCanvas();
     calculateMotion(elapsed);
     calculateVelocity(elapsed);
     drawAll();
     window.requestAnimationFrame(updateCanvas);
+  } else {
+    clearFPS();
   }
 }
 
