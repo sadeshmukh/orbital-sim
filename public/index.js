@@ -253,6 +253,7 @@ function reset() {
   positionHistoryLength = defaultPositionHistoryLength;
   configSelect.value = 0;
   clearFPS();
+  blackHoleMode = false;
 }
 
 function calculateDistance([x1, y1], [x2, y2]) {
